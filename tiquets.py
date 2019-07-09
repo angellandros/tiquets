@@ -1,6 +1,7 @@
 import argparse
 import csv
 from collections import defaultdict
+import logging
 
 
 def load_orders(orders_file):
@@ -26,16 +27,22 @@ def load_barcodes(barcodes_file):
     ({'1': ['11111111111'], '2': ['11111111112']}, ['11111111113'])
     """
     inverted_index = defaultdict(list)
+    assigned_barcodes = dict()
     unassigned_barcodes = list()
     title_row = True
     for barcode, order_id in csv.reader(barcodes_file, delimiter=',', quotechar='"'):
         if title_row:
             title_row = False
             continue
-        if order_id != '':
-            inverted_index[order_id].append(barcode)
-        else:
+        if barcode in assigned_barcodes:
+            logging.error('barcode=%s is already assigned to order_id=%s, ignoring new assignment: order_id=%s',
+                          barcode, assigned_barcodes[barcode], order_id)
+            continue
+        if order_id == '':
             unassigned_barcodes.append(barcode)
+            continue
+        assigned_barcodes[barcode] = order_id
+        inverted_index[order_id].append(barcode)
 
     return dict(inverted_index), unassigned_barcodes
 
@@ -55,22 +62,25 @@ def make_complete_report(orders_data, barcodes_index, output_file):
     '10,1,11111111111\\n11,2,11111111112\\n'
     """
     for order_id, customer_id in orders_data:
+        if order_id not in barcodes_index:
+            logging.error('no barcode assigned to order with order_id=%s', order_id)
+            continue
         output_file.write('%s,%s,%s\n' % (customer_id, order_id, ','.join(barcodes_index[order_id])))
 
 
 def main(orders_file, barcodes_file, output_file):
     orders_data = load_orders(orders_file)
-    barcodes_index = load_barcodes(barcodes_file)
+    barcodes_index, _ = load_barcodes(barcodes_file)
     make_complete_report(orders_data, barcodes_index, output_file)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('orders', help='CSV file containing data of orders', default='orders.csv',
+    parser.add_argument('-o', '--orders', help='CSV file containing data of orders', default='orders.csv',
                         type=argparse.FileType('r'))
-    parser.add_argument('barcodes', help='CSV file containing data of barcodes', default='barcodes.csv',
+    parser.add_argument('-b', '--barcodes', help='CSV file containing data of barcodes', default='barcodes.csv',
                         type=argparse.FileType('r'))
-    parser.add_argument('output', help='output CSV file', default='output.csv',
+    parser.add_argument('-O', '--output', help='output CSV file', default='output.csv',
                         type=argparse.FileType('w'))
     args = parser.parse_args()
-    main(orders_file=args.orders, barcodes_file=args.barcodes)
+    main(orders_file=args.orders, barcodes_file=args.barcodes, output_file=args.output)
