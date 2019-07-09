@@ -6,5 +6,8 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+install:
+  - pip install pep8
 script:
   - python -m doctest -v tiquets.py
+  - pep8 --ignore=E501 .
