@@ -83,11 +83,11 @@ def main(orders_file, barcodes_file, output_file):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o', '--orders', help='CSV file containing data of orders', default='orders.csv',
-                        type=argparse.FileType('r'))
-    parser.add_argument('-b', '--barcodes', help='CSV file containing data of barcodes', default='barcodes.csv',
-                        type=argparse.FileType('r'))
-    parser.add_argument('-O', '--output', help='output CSV file', default='output.csv',
+    parser.add_argument('-o', '--orders', help='CSV file containing data of orders, default=orders.csv',
+                        default='orders.csv', type=argparse.FileType('r'))
+    parser.add_argument('-b', '--barcodes', help='CSV file containing data of barcodes, default=barcodes.csv',
+                        default='barcodes.csv', type=argparse.FileType('r'))
+    parser.add_argument('-O', '--output', help='output CSV file, default=output.csv', default='output.csv',
                         type=argparse.FileType('w'))
     args = parser.parse_args()
     main(orders_file=args.orders, barcodes_file=args.barcodes, output_file=args.output)
